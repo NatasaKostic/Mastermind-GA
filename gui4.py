@@ -3,8 +3,7 @@ from tkinter import font  as tkfont # python 3
 #import Tkinter as tk     # python 2
 #import tkFont as tkfont  # python 2
 from combinatorics import all_colours
-
-
+import random
 
 class SampleApp(Tk):
 
@@ -30,14 +29,6 @@ class SampleApp(Tk):
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
-
-
-    def getCombo(self):
-        # print (("Your combo is '{}'").format(self.combo))
-        return self.combo
-        # self.show_frame("PlayGame")
-        # controller.combo = self.combo
-        # controller.getCombo
 
 
 class StartPage(Frame):
@@ -73,7 +64,7 @@ class ComboSelection(Frame):
         buttonPurple = Button(self, text="Purple", command=lambda: self.selectCombo("purple"))
         buttonYellow = Button(self, text="Yellow", command=lambda: self.selectCombo("yellow"))
         
-        buttonOK = Button(self, text="OK", command=lambda: self.getCombo(controller))
+        buttonOK = Button(self, text="OK", command=lambda: self.setCombo(controller))
         buttonPlay = Button(self, text="Let's play!", command=lambda: controller.show_frame("PlayGame"))
 
         buttonRed.pack()
@@ -96,9 +87,9 @@ class ComboSelection(Frame):
           pass
           # tkMessageBox.showwarning("Oops!", "Looks like you have already selected a combination!")
 
-    def getCombo(self, controller):
+
+    def setCombo(self, controller):
         controller.combo = self.combo
-        controller.getCombo()
 
 
 class PlayGame(Frame):
@@ -106,108 +97,92 @@ class PlayGame(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        self.combo = controller.getCombo()
+        self.combo = []
 
         row_offset = 1
         number_of_positions = 4
 
         # print (("Your comboooo is '{}'").format(self.combo))
-        showMyGuess = Button(self, text="Show my combo", command= lambda: self.show_init_guess(controller))
+        showMyGuess = Button(self, text="Show my combo", command= lambda: self.show_my_combo(controller))
         showMyGuess.grid(row=row_offset, column=0)
         
-
         entryLabel = Label(self, text="Completely Correct:")
-        entryLabel.grid(row=row_offset, sticky=E, padx=5, column=number_of_positions + 4)
+        entryLabel.grid(row=row_offset+1, sticky=E, padx=5, column=number_of_positions + 4)
         entryWidget_both = Entry(self)
         entryWidget_both["width"] = 5
-        entryWidget_both.grid(row=row_offset, column=number_of_positions + 5)
+        entryWidget_both.grid(row=row_offset+1, column=number_of_positions + 5)
         
         entryLabel = Label(self)
         entryLabel["text"] = "Wrong Position:"
-        entryLabel.grid(row=row_offset+2, sticky=E, padx=5, column= number_of_positions + 4)
+        entryLabel.grid(row=row_offset+3, sticky=E, padx=5, column= number_of_positions + 4)
         entryWidget_only_colours = Entry(self)
         entryWidget_only_colours["width"] = 5
-        entryWidget_only_colours.grid(row=row_offset+2, column=number_of_positions + 5)
+        entryWidget_only_colours.grid(row=row_offset+3, column=number_of_positions + 5)
+        
+        colors = ["red", "blue", "magenta", "green", "purple", "yellow"]
+        init_guess = []
 
-        submit_button = Button(self, text="Submit", command= lambda: self.new_evaluation_tk)
-        submit_button.grid(row=4,column=number_of_positions + 4)
+        while len(init_guess) < 4:
+            i = random.randint(0, 5)
+            if colors[i] not in init_guess:
+                init_guess.append(colors[i])
+
+        self.most_recent_guess = init_guess
+        submit_button = Button(self, text="Submit")
+        submit_button["command"] = lambda: self.eval_guess(entryWidget_both.get(), entryWidget_only_colours.get(), self.most_recent_guess)
+        submit_button.grid(row=5,column=number_of_positions + 4)
 
         quit_button = Button(self, text="Quit", command=self.quit)
-        quit_button.grid(row=4,column=number_of_positions + 5)
-        # self.show_init_guess(controller)
+        quit_button.grid(row=5,column=number_of_positions + 5)
+
+        self.show_current_guess(init_guess)
     
 
-    def show_init_guess(self, controller):
-        # print (("Controller comboooo is '{}'").format(controller.combo))
+    def show_my_combo(self, controller):
         row = 2 
         Label(self, text="   Your combo is   ").grid(row=row, column=0, columnspan=4)
         row +=1
         col_count = 1
         for c in controller.combo:
-            print(c)
+            # print(c)
             l = Label(self, text="    ", bg=c)
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
 
 
     def show_current_guess(self, new_guess):
-        row = 2 
+        row = 4
         Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=4)
         row +=1
-        col_count = 0
+        col_count = 1
         for c in new_guess:
-            print(c)
+            # print(c)
             l = Label(self, text="    ", bg=c)
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
 
-    
-    # def getCombo(self, controller):
-    #     return controller.combo
 
-    # def __init__(self, parent, controller):
+    def eval_guess(self, both, colors, most_recent_guess):
+        if len(both) == 0:
+            both = 0
+        if len(colors) == 0:
+            colors = 0
+        eval_result = (both, colors)
 
-    #     label.pack(side="top", fill="x", pady=10)
+        self.create_new_guess(eval_result, self.most_recent_guess) 
+        
 
-
-    #     colours = ["red","green","blue","yellow","orange","pink"]
-    #     guesses = []       
-    #     number_of_positions = 4
-
-    #     permutation_iterator = all_colours(colours, number_of_positions)
-    #     current_colour_choices = next(permutation_iterator)
-
-    #     new_guess = (current_colour_choices, (0,0))
-
-    #     row_offset = 1
-    #     # root = Tk()
-    #     # root.title("Mastermind")
-    #     # root["padx"] = 30
-    #     # root["pady"] = 20   
-
-    #     self.show_current_guess(current_colour_choices)
+    ### eval_result is a tuple of (# color+position, #color only) of the most recent guess
+    ### most_recent_guess is an array of the colors of the most recent guess
+    def create_new_guess(self, eval_result, most_recent_guess):
+        print ("the most recent guess is '{}'".format(most_recent_guess))
+        
+        ## in the end set the line below to the result (the green stuff is a placeholder)
+        self.most_recent_guess = ["green", "green", "green", "green"]
 
 
 
 
-
-    # def inconsistent(p, guesses):
-    #     for guess in guesses:
-    #       res = check(guess[0], p)
-    #       (rightly_positioned, permutated) = guess[1]
-    #     if res != [rightly_positioned, permutated]:
-    #      return True # inconsistent
-    #     return False # i.e. consistent
-
-
-    # def reasonable(right, color):
-    #     return not ((right + color > 4) or (right + color < 2) or (right == 3 and color == 1))
-
-
-    # def get_evaluation():
-    #     rightly_positioned = int(entryWidget_both.get())
-    #     permutated = int(entryWidget_only_colours.get())
-    #     return (rightly_positioned, permutated)
 
     # def new_evaluation(self, current_colour_choices):
     #     rightly_positioned, permutated = get_evaluation()
@@ -225,6 +200,19 @@ class PlayGame(Frame):
     #     if not current_colour_choices:
     #         return(current_colour_choices, (-1, permutated))
     #     return(current_colour_choices, (rightly_positioned, permutated))
+
+
+    # def inconsistent(p, guesses):
+    #     for guess in guesses:
+    #       res = check(guess[0], p)
+    #       (rightly_positioned, permutated) = guess[1]
+    #     if res != [rightly_positioned, permutated]:
+    #      return True # inconsistent
+    #     return False # i.e. consistent
+
+
+    # def reasonable(right, color):
+    #     return not ((right + color > 4) or (right + color < 2) or (right == 3 and color == 1))
 
     # def check(p1, p2):
     #     blacks = 0
