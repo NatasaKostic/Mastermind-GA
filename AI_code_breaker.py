@@ -163,6 +163,8 @@ def AI_play(guesses, n_col, n_peg, responses):
 	if(X_i != n_peg):
 		options = GA(n_peg, n_col, guesses, responses)
 		curr_guess = options[1]
+
+	# send this to GUI
 	return curr_guess
 
 
@@ -215,7 +217,7 @@ def play(n_col, n_peg, n_turns):
 			guesses.append(guess)
 
 		else:
-			# get real code from gui
+			# GET reponse from GUI
 			response = person_play(guess, [1,2,2,4])
 			responses.append(response)
 			# show the response on the GUI
