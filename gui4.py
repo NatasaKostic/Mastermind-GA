@@ -1,8 +1,7 @@
 from tkinter import *                # python 3
 from tkinter import font  as tkfont # python 3
-#import Tkinter as tk     # python 2
-#import tkFont as tkfont  # python 2
-from combinatorics import all_colours
+from tkinter import messagebox
+# from combinatorics import all_colours
 import random
 
 class SampleApp(Tk):
@@ -10,13 +9,15 @@ class SampleApp(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title("Mastermind")
-        self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
+        self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold")
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         self.combo = []
+        self.num_pegs = 0
+        self.num_cols = 0
         self.frames = {}
         for F in (StartPage, ComboSelection, PlayGame):
             page_name = F.__name__
@@ -39,57 +40,81 @@ class StartPage(Frame):
         label = Label(self, text="Welcome! Let's play Mastermind!", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
 
-        button1 = Button(self, text="Select your color code",
-                            command=lambda: controller.show_frame("ComboSelection"))
-        button1.pack()
+        buttonNum_pegs_lbl = Label(self, text="Choose the number to have in your combination (must be between 4 and 6):")
+        buttonNum_pegs = Entry(self)
+        buttonNum_cols_lbl = Label(self, text="Choose the number of colors to select from (must be between 6 and 10):")
+        buttonNum_cols = Entry(self)
+        
+        sub = Button(self, text="Submit", 
+            command=lambda: self.set_nums(buttonNum_pegs.get(), buttonNum_cols.get(), controller))
 
+        buttonNum_pegs_lbl.pack()
+        buttonNum_pegs.pack()
+        buttonNum_cols_lbl.pack()
+        buttonNum_cols.pack()
+        sub.pack()
+
+        # button1 = Button(self, text="Select your color code",
+        #                     command=lambda: controller.show_frame("ComboSelection"))
+        # button1.pack()
+
+    def set_nums(self, pegs, cols, controller):
+        # print (int(pegs))
+        if len(pegs) == 0:
+            messagebox.showinfo("Default selection", "Default number for pegs: 4")
+            pegs = 4
+        if len(cols) == 0:
+            messagebox.showinfo("Default selection", "Default number for colors: 6")
+            cols = 6
+
+        if int(pegs) < 4 or int(pegs) > 6:
+            messagebox.showinfo("Invalid number of pegs", "Default number of pegs: 4")
+            pegs = 4
+        if int(cols) < 6 or int(cols) > 10:
+            messagebox.showinfo("Invalid number of colors", "Default number of colors: 6")
+            pegs = 6
+        
+        controller.num_pegs = int(pegs)
+        controller.num_cols = int(cols)
+        controller.show_frame("ComboSelection")
 
 class ComboSelection(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        label = Label(self, text="1. Select 4 colors for your combination", font=controller.title_font)
-        label2 = Label(self, text="2. Click OK ", font=controller.title_font)
-        label3 = Label(self, text="3. Start playing!", font=controller.title_font)
-        
-        label.pack(side="top", fill="x", pady=5)
-        label2.pack(side="top", fill="x", pady=5)
-        label3.pack(side="top", fill="x", pady=5)
-
-        buttonRed = Button(self, text="Red", command=lambda: self.selectCombo("red"))
-        buttonBlue = Button(self, text="Blue", command=lambda: self.selectCombo("blue"))
-        buttonMagenta = Button(self, text="Magenta", command=lambda: self.selectCombo("magenta"))
-        buttonGreen = Button(self, text="Green", command=lambda: self.selectCombo("green"))
-        buttonPurple = Button(self, text="Purple", command=lambda: self.selectCombo("purple"))
-        buttonYellow = Button(self, text="Yellow", command=lambda: self.selectCombo("yellow"))
-        
-        buttonOK = Button(self, text="OK", command=lambda: self.setCombo(controller))
-        buttonPlay = Button(self, text="Let's play!", command=lambda: controller.show_frame("PlayGame"))
-
-        buttonRed.pack()
-        buttonBlue.pack()
-        buttonMagenta.pack()
-        buttonGreen.pack()
-        buttonPurple.pack()
-        buttonYellow.pack()
-        buttonOK.pack(pady=10)
-        buttonPlay.pack(pady=10)
-        
+        selectColors = Button(self, text="Select my combination", command=lambda: self.showButtons(controller))
+        selectColors.pack()
         self.colorsSelected = 0
         self.combo = []
 
-    def selectCombo(self, color):
-      self.colorsSelected = self.colorsSelected + 1
-      if self.colorsSelected <= 4:
-          self.combo.append(color)
-      else:
-          pass
-          # tkMessageBox.showwarning("Oops!", "Looks like you have already selected a combination!")
+    def showButtons(self, controller):
+        num_pegs = controller.num_pegs
+        num_cols = controller.num_cols
 
+        colors = ["navy", "gray", "maroon", "blue", "orange", "red", "magenta", "green", "purple", "yellow"]
+        i = 0
+        while i < controller.num_cols:
+            button = Button(self, text=colors[i].title(), command=lambda i=i: self.selectCombo(colors[i], controller))
+            button.pack()
+            i = i+1
+
+        buttonOK = Button(self, text="OK", command=lambda: self.setCombo(controller))
+        # buttonPlay = Button(self, text="Let's play!", command=lambda: controller.show_frame("PlayGame"))
+        buttonOK.pack(pady=10)
+        # buttonPlay.pack(pady=10)
+
+    def selectCombo(self, color, controller):
+        self.colorsSelected = self.colorsSelected + 1
+        if self.colorsSelected <= controller.num_pegs:
+            self.combo.append(color)
+        else:
+            msg = "Looks like you have already selected a combination of " + str(controller.num_pegs) + " colors!"
+            messagebox.showwarning("Oops!", msg)
 
     def setCombo(self, controller):
         controller.combo = self.combo
+        controller.show_frame("PlayGame")
 
 
 class PlayGame(Frame):
@@ -99,52 +124,55 @@ class PlayGame(Frame):
         self.controller = controller
         self.combo = []
 
-        row_offset = 1
-        number_of_positions = 4
+        self.letsGo = Button(self, text="Let's Play!", command= lambda: self.init_gui_game(controller))
+        self.letsGo.place(relx=0.5, rely=0.5, anchor=CENTER)
+        
+    def init_gui_game(self, controller):
+        self.show_my_combo(controller)
+        self.letsGo.destroy()
 
-        # print (("Your comboooo is '{}'").format(self.combo))
-        showMyGuess = Button(self, text="Show my combo", command= lambda: self.show_my_combo(controller))
-        showMyGuess.grid(row=row_offset, column=0)
+        row_offset = 1
+        number_of_positions = controller.num_pegs
         
         entryLabel = Label(self, text="Completely Correct:")
-        entryLabel.grid(row=row_offset+1, sticky=E, padx=5, column=number_of_positions + 4)
+        entryLabel.grid(row=row_offset+2, sticky=E, padx=5, column=number_of_positions + 7)
         entryWidget_both = Entry(self)
         entryWidget_both["width"] = 5
-        entryWidget_both.grid(row=row_offset+1, column=number_of_positions + 5)
+        entryWidget_both.grid(row=row_offset+2, column=number_of_positions + 8)
         
-        entryLabel = Label(self)
-        entryLabel["text"] = "Wrong Position:"
-        entryLabel.grid(row=row_offset+3, sticky=E, padx=5, column= number_of_positions + 4)
+        entryLabel2 = Label(self, text= "Wrong Position:")
+        entryLabel2.grid(row=row_offset+4, sticky=E, padx=5, column= number_of_positions + 7)
         entryWidget_only_colours = Entry(self)
         entryWidget_only_colours["width"] = 5
-        entryWidget_only_colours.grid(row=row_offset+3, column=number_of_positions + 5)
-        
-        colors = ["red", "blue", "magenta", "green", "purple", "yellow"]
+        entryWidget_only_colours.grid(row=row_offset+4, column=number_of_positions + 8)            
+
+        colors = ["navy", "gray", "maroon", "blue", "orange", "red", "magenta", "green", "purple", "yellow"]
         init_guess = []
 
-        while len(init_guess) < 4:
-            i = random.randint(0, 5)
+        while len(init_guess) < controller.num_pegs:
+            i = random.randint(0, controller.num_cols)
             if colors[i] not in init_guess:
                 init_guess.append(colors[i])
 
         self.most_recent_guess = init_guess
         submit_button = Button(self, text="Submit")
         submit_button["command"] = lambda: self.eval_guess(entryWidget_both.get(), entryWidget_only_colours.get(), self.most_recent_guess)
-        submit_button.grid(row=5,column=number_of_positions + 4)
+        submit_button.grid(row=6,column=number_of_positions + 7)
 
         quit_button = Button(self, text="Quit", command=self.quit)
-        quit_button.grid(row=5,column=number_of_positions + 5)
+        quit_button.grid(row=6,column=number_of_positions + 8)
 
         self.show_current_guess(init_guess)
-    
+
+
 
     def show_my_combo(self, controller):
         row = 2 
-        Label(self, text="   Your combo is   ").grid(row=row, column=0, columnspan=4)
+        Label(self, text="   Your combo is   ").grid(row=row, column=0, columnspan=6)
         row +=1
         col_count = 1
         for c in controller.combo:
-            # print(c)
+            print(c)
             l = Label(self, text="    ", bg=c)
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
@@ -152,7 +180,7 @@ class PlayGame(Frame):
 
     def show_current_guess(self, new_guess):
         row = 4
-        Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=4)
+        Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=6)
         row +=1
         col_count = 1
         for c in new_guess:
