@@ -152,9 +152,8 @@ class PlayGame(Frame):
         entryWidget_only_colours = Entry(self, width=5)
         entryWidget_only_colours.grid(row=row_offset+4, column=number_of_positions + 8, padx=(0,20))            
 
-        # colors = ["navy", "gray", "maroon", "blue", "orange", "red", "magenta", "green", "purple", "yellow"]
         init_guess = []
-        # print (('{}').format(self.controller.possible_cols))
+        
         while len(init_guess) < self.controller.num_pegs:
             i = random.randint(0, self.controller.num_cols-1)
             if i not in init_guess:
@@ -195,7 +194,9 @@ class PlayGame(Frame):
         Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=6)
         row +=1
         col_count = 2
+        print (("new guess is: '{}'").format(new_guess))
         guess = self.idx_to_cols(new_guess)
+        print (("new guess2 is: '{}'").format(guess))
         for c in guess:
             # print(c)
             l = Label(self, text="    ", bg=c)
@@ -211,9 +212,9 @@ class PlayGame(Frame):
         Label(self, text="Color Only").grid(row=row, padx=5, column=number_of_positions + 4)
 
         for idx in range(len(self.guesses)-2, -1, -1):
-            print (('{}').format(self.guesses[idx]))
+            # print (('{}').format(self.guesses[idx]))
             guess = self.idx_to_cols(self.guesses[idx])
-            print (('{}').format(guess))
+            # print (('{}').format(guess))
             row += 1
             col_count = 2
             
