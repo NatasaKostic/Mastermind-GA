@@ -155,7 +155,7 @@ class PlayGame(Frame):
         init_guess = []
         
         while len(init_guess) < self.controller.num_pegs:
-            i = random.randint(0, self.controller.num_cols-1)
+            i = random.randint(1, self.controller.num_cols)
             if i not in init_guess:
                 init_guess.append(i)
 
@@ -382,7 +382,7 @@ class PlayGame(Frame):
             curr_guess = options[1]
 
         # curr_guess = ["green", "green", "green", "green", "green", "green"]
-        print (curr_guess)
+        print ("guess in here is '{}'".format(curr_guess))
         self.most_recent_guess = curr_guess
         self.guesses.append(curr_guess)
         self.show_current_guess(curr_guess)
