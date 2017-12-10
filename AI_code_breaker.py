@@ -84,6 +84,7 @@ def GA(n_peg, n_col, prev_guesses, responses):
 	E_h = []
 	
 	while(h <= MAX_GEN and len(E_h) <= MAX_POP):
+		print("in while")
 
 
 		# first evaluate the population and take some of the best + some random
@@ -91,20 +92,33 @@ def GA(n_peg, n_col, prev_guesses, responses):
 		for indiv in population:
 			fitness.append(get_fitness(prev_guesses, indiv, responses, n_peg))
 
+
 		# the new generation will contain some of the best indivs in this gen + randoms,
 		# crossed over offspring of some,
 		# mutations of some
 		# use fitness values as probabilities to choose best indivs to keep same
-		pop_elts = list(range(len(population)))
-		probs = [x / sum(fitness) for x in fitness]
-		ng = numpy.random.choice(pop_elts, size = int(MAX_POP*(1-P_CROSS_OVER)), replace=False, p = probs)
+		#pop_elts = list(range(len(population)))
+		#probs = [((1-x) / sum(fitness))/len(fitness) for x in fitness]
+		#ng = numpy.random.choice(pop_elts, size = int(MAX_POP*(1-P_CROSS_OVER)), replace=False, p = probs)
 		
-		new_gen = [population[i] for i in ng]
+		#new_gen = [population[i] for i in ng]
+		new_gen = []
+		for i in range(len(population)):
+			if random.random() <= (2*n_peg - fitness[i])/sum(range(n_peg)):
+				new_gen.append(population[i])
+			if len(new_gen) == int(MAX_POP*(1-P_CROSS_OVER)):
+				break
 		
 		# select parents from previous gen using fitness values as probabilities
-		par = numpy.random.choice(pop_elts, size= int(MAX_POP*P_CROSS_OVER-10), replace=False, p = probs)
+		#par = numpy.random.choice(pop_elts, size= int(MAX_POP*P_CROSS_OVER-10), replace=False, p = probs)
 		# add some random indiv to parental pool promote genetic diversity
-		parents = [population[i] for i in par]
+		parents = []#[population[i] for i in par]
+		for i in range(len(population)):
+			if random.random() <= (2*n_peg - fitness[i])/sum(range(n_peg)):
+				parents.append(population[i])
+			if len(parents) == int(MAX_POP*P_CROSS_OVER-10):
+				break
+
 
 		while len(parents) < MAX_POP*P_CROSS_OVER:
 			parents.append([random.randint(1, n_col) for i in range(n_peg)])
@@ -127,11 +141,10 @@ def GA(n_peg, n_col, prev_guesses, responses):
 		fitness = []
 		for indiv in new_gen:
 			fitness.append(get_fitness(prev_guesses,indiv, responses, n_peg))
-		print("new gen:" + str(new_gen))
-		print("fitness vals:" + str(fitness))
 		# add eligible codes to E_h e.g. codes with fitness above a required value
 		for f in range(len(fitness)):
-			if fitness[f] >= REQ_FIT:
+			if fitness[f] == 0:
+				print(fitness[f])
 				E_h.append(new_gen[f])
 
 		# remove dups in eligibles
@@ -142,6 +155,8 @@ def GA(n_peg, n_col, prev_guesses, responses):
 		while len(population) < MAX_POP:
 			population.append([random.randint(1, n_col) for i in range(n_peg)])
 			population = remove_dups(population)
+
+		print(len(E_h))
 
 	return E_h
 
