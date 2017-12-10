@@ -241,6 +241,10 @@ class PlayGame(Frame):
         else:   
             self.responses.append(eval_result)
             self.AI_play(self.responses, self.guesses) 
+
+#################################################################################
+# GENETIC ALGORITHM FUNCTIONS
+#################################################################################
         
 
     def remove_dups(self, mylist):
@@ -269,11 +273,12 @@ class PlayGame(Frame):
             g1[loc] = col
         return(g1)
 
-    def get_fitness(self, prev_guesses, g2, responses, n_peg):
+    def get_fitness(self, prev_guesses, this_option, responses, n_peg):
         a = 1
         b = 2
         X_vals = []
         Y_vals = []
+        g2 = this_option[:]
         for i in range(len(prev_guesses)):
             g1 = prev_guesses[i][:]
 
@@ -286,7 +291,9 @@ class PlayGame(Frame):
                 if(g2[i] == g1[i]):
                     Xi_g2 += 1
                     g1[i] = 0
-                elif g2[i] in g1:
+                    g2[i] = -1
+            for i in range(len(g1)):
+                if g2[i] in g1:
                     Yi_g2 += 1
                     idx = g1.index(g2[i])
                     g1[idx] = 0

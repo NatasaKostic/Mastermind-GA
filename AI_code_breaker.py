@@ -40,11 +40,12 @@ def mutate(g1, n_peg, n_col):
 		g1[loc] = col
 	return(g1)
 
-def get_fitness(prev_guesses, g2, responses, n_peg):
+def get_fitness(prev_guesses, this_option, responses, n_peg):
 	a = 1
 	b = 2
 	X_vals = []
 	Y_vals = []
+	g2 = this_option[:]
 	for i in range(len(prev_guesses)):
 		g1 = prev_guesses[i][:]
 
@@ -57,7 +58,9 @@ def get_fitness(prev_guesses, g2, responses, n_peg):
 			if(g2[i] == g1[i]):
 				Xi_g2 += 1
 				g1[i] = 0
-			elif g2[i] in g1:
+				g2[i] = -1
+		for i in range(len(g1)):
+			if g2[i] in g1:
 				Yi_g2 += 1
 				idx = g1.index(g2[i])
 				g1[idx] = 0
@@ -72,8 +75,6 @@ def get_fitness(prev_guesses, g2, responses, n_peg):
 def GA(n_peg, n_col, prev_guesses, responses):
 
 	print("new GA iter")
-# fitne'ss fxn that's inversely proportional to the difference between the solution and the value a decoded chromosome represents
-
 
 	# initialize the population and remove any duplicates
 	population = [[random.randint(1, n_col) for i in range(n_peg)] for j in range(MAX_POP)]
@@ -84,8 +85,7 @@ def GA(n_peg, n_col, prev_guesses, responses):
 	E_h = []
 	
 	while(h <= MAX_GEN and len(E_h) <= MAX_POP):
-		print("in while")
-
+		h += 1
 
 		# first evaluate the population and take some of the best + some random
 		fitness = []
@@ -97,11 +97,6 @@ def GA(n_peg, n_col, prev_guesses, responses):
 		# crossed over offspring of some,
 		# mutations of some
 		# use fitness values as probabilities to choose best indivs to keep same
-		#pop_elts = list(range(len(population)))
-		#probs = [((1-x) / sum(fitness))/len(fitness) for x in fitness]
-		#ng = numpy.random.choice(pop_elts, size = int(MAX_POP*(1-P_CROSS_OVER)), replace=False, p = probs)
-		
-		#new_gen = [population[i] for i in ng]
 		new_gen = []
 		for i in range(len(population)):
 			if random.random() <= (2*n_peg - fitness[i])/sum(range(n_peg)):
@@ -110,9 +105,8 @@ def GA(n_peg, n_col, prev_guesses, responses):
 				break
 		
 		# select parents from previous gen using fitness values as probabilities
-		#par = numpy.random.choice(pop_elts, size= int(MAX_POP*P_CROSS_OVER-10), replace=False, p = probs)
 		# add some random indiv to parental pool promote genetic diversity
-		parents = []#[population[i] for i in par]
+		parents = []
 		for i in range(len(population)):
 			if random.random() <= (2*n_peg - fitness[i])/sum(range(n_peg)):
 				parents.append(population[i])
@@ -144,7 +138,6 @@ def GA(n_peg, n_col, prev_guesses, responses):
 		# add eligible codes to E_h e.g. codes with fitness above a required value
 		for f in range(len(fitness)):
 			if fitness[f] == 0:
-				print(fitness[f])
 				E_h.append(new_gen[f])
 
 		# remove dups in eligibles
@@ -156,8 +149,6 @@ def GA(n_peg, n_col, prev_guesses, responses):
 			population.append([random.randint(1, n_col) for i in range(n_peg)])
 			population = remove_dups(population)
 
-		print(len(E_h))
-
 	return E_h
 
 
@@ -165,41 +156,34 @@ def AI_play(guesses, n_col, n_peg, responses):
 
 	print("response:" + str(responses[-1]))
 
-	# # if this is the first guess, generate randomly
-	# if response == None:
-	# 	# assign an interger to each possible color
-	# 	colors = range(1,n_col)
-	# 	# play initial random guess
-	# 	curr_guess = numpy.random.choice(colors, n_peg)
-
-	# else:
 	X_i = responses[-1][0]
 	Y_i = responses[-1][1]
 	if(X_i != n_peg):
 		options = GA(n_peg, n_col, guesses, responses)
 		curr_guess = options[1]
 
-	# send this to GUI
 	return curr_guess
 
 
 
 def person_play(guess, code):
-	print("guess used in respose:" + str(guess))
 	# X_i = exact number of matches in iteration i (red pegs)
 	X_i = 0
 	# Y_i = number of partial matches in iteration i (white pegs)
 	Y_i = 0
 	
 	c = code[:]
+	g = guess[:]
 
 	#simulate response from person
 	j = 0
 	for i in range(len(c)):
-		if(guess[i] == c[i]):
+		if(g[i] == c[i]):
 			X_i += 1
 			c[i] = 0
-		elif guess[i] in c:
+			g[i] = -1
+	for i in range(len(c)):
+		if g[i] in c:
 			Y_i += 1
 			idx = c.index(guess[i])
 			c[idx] = 0
@@ -248,7 +232,7 @@ def main():
 	# the number of pegs that can be used in a code
 	num_pegs = int(sys.argv[2])
 
-	play(num_colors, num_pegs, 4)
+	play(num_colors, num_pegs, 8)
 
 
 
