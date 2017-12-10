@@ -131,7 +131,7 @@ class PlayGame(Frame):
         self.P_MUTATE = 0.03
         self.P_PERMUTE = 0.03
         self.MAX_GEN = 100
-        self.MAX_POP = 60
+        self.MAX_POP = 150
         self.REQ_FIT = 1
 
 
@@ -194,9 +194,9 @@ class PlayGame(Frame):
         Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=6)
         row +=1
         col_count = 2
-        print (("new guess is: '{}'").format(new_guess))
+        #print (("new guess is: '{}'").format(new_guess))
         guess = self.idx_to_cols(new_guess)
-        print (("new guess2 is: '{}'").format(guess))
+        #print (("new guess2 is: '{}'").format(guess))
         for c in guess:
             # print(c)
             l = Label(self, text="    ", bg=c)
@@ -301,13 +301,11 @@ class PlayGame(Frame):
             X_vals.append(abs(Xi_g2 - X_i))
             Y_vals.append(abs(Yi_g2 - Y_i))
 
-        fitness_g2 = a * sum(X_vals) + sum(Y_vals) + b * n_peg * (len(prev_guesses) -1)
+        fitness_g2 = a * sum(X_vals) + sum(Y_vals) # + b * n_peg * (len(prev_guesses) -1)
         return(fitness_g2)
 
 
     def GA(self, n_peg, n_col, prev_guesses, responses):
-        # print("new GA iter")
-    # fitne'ss fxn that's inversely proportional to the difference between the solution and the value a decoded chromosome represents
 
         # initialize the population and remove any duplicates
         population = [[random.randint(1, n_col) for i in range(n_peg)] for j in range(self.MAX_POP)]
@@ -318,6 +316,7 @@ class PlayGame(Frame):
         E_h = []
         
         while(h <= self.MAX_GEN and len(E_h) <= self.MAX_POP):
+            h += 1
             # first evaluate the population and take some of the best + some random
             fitness = []
             for indiv in population:
@@ -327,18 +326,23 @@ class PlayGame(Frame):
             # crossed over offspring of some,
             # mutations of some
             # use fitness values as probabilities to choose best indivs to keep same
-            pop_elts = list(range(len(population)))
-            probs = [x / sum(fitness) for x in fitness]
-            ng = numpy.random.choice(pop_elts, size = int(self.MAX_POP*(1-self.P_CROSS_OVER)), replace=False, p = probs)
-            
-            new_gen = [population[i] for i in ng]
+            new_gen = []
+            for i in range(len(population)):
+                if random.random() <= (2*n_peg - fitness[i])/sum(range(n_peg)):
+                    new_gen.append(population[i])
+                if len(new_gen) == int(self.MAX_POP*(1-self.P_CROSS_OVER)):
+                    break
             
             # select parents from previous gen using fitness values as probabilities
-            par = numpy.random.choice(pop_elts, size= int(self.MAX_POP*self.P_CROSS_OVER-10), replace=False, p = probs)
-            # add some random indiv to parental pool promote genetic diversity
-            parents = [population[i] for i in par]
+            parents = []
+            for i in range(len(population)):
+                if random.random() <= (2*n_peg - fitness[i])/sum(range(n_peg)):
+                    parents.append(population[i])
+                if len(parents) == int(self.MAX_POP*self.P_CROSS_OVER-10):
+                    break
 
-            while len(parents) < self.MAX_POP*self.P_CROSS_OVER:
+            # add some random indiv to parental pool promote genetic diversity
+            while len(parents) < int(self.MAX_POP*self.P_CROSS_OVER/2) * 2:
                 parents.append([random.randint(1, n_col) for i in range(n_peg)])
 
             random.shuffle(parents)
@@ -358,24 +362,30 @@ class PlayGame(Frame):
             #get fitness of the elements in this new gen
             fitness = []
             for indiv in new_gen:
-                fitness.append(self.get_fitness(prev_guesses,indiv, responses, n_peg))
-            # print("new gen:" + str(new_gen))
-            # print("fitness vals:" + str(fitness))
-            # add eligible codes to E_h e.g. codes with fitness above a required value
-            for f in range(len(fitness)):
-                if fitness[f] >= self.REQ_FIT:
-                    E_h.append(new_gen[f])
+                fitness.append((indiv,self.get_fitness(prev_guesses,indiv, responses, n_peg)))
+            # eligible individuals have a fitness of 0
+            for (indiv,f) in fitness:
+                if f == 0:
+                    E_h.append((indiv,f))
 
             # remove dups in eligibles
-            E_h = self.remove_dups(E_h)
-
-            population = E_h
+            #print("removing dups")
+            #print(len(E_h))
+            #E_h = self.remove_dups(E_h)
+            #print("len of Eh after: " + str(len(E_h)))
+            
+            #population = E_h
+            population = [i[0] for i in E_h]
             # fill remaining spot with random and remove duplicates again
             while len(population) < self.MAX_POP:
                 population.append([random.randint(1, n_col) for i in range(n_peg)])
                 population = self.remove_dups(population)
 
-        return E_h
+        print(len(E_h))
+        # Eh should only contain codes with score = 0
+        #for elt in E_h:
+        #    print(self.get_fitness(prev_guesses,elt, responses, n_peg))
+        return E_h[0][0]
 
 
     def AI_play(self, responses, guesses):
@@ -386,13 +396,18 @@ class PlayGame(Frame):
         Y_i = responses[-1][1]
         if(X_i != n_peg):
             options = self.GA(n_peg, n_col, guesses, responses)
-            curr_guess = options[1]
+            curr_guess = options
+            fitcg = self.get_fitness(self.guesses, curr_guess, self.responses, n_peg)
+            print("fitness of choson: " + str(fitcg))
 
         # curr_guess = ["green", "green", "green", "green", "green", "green"]
-        print ("guess in here is '{}'".format(curr_guess))
+        #print ("guess in here is '{}'".format(curr_guess))
         self.most_recent_guess = curr_guess
         self.guesses.append(curr_guess)
         self.show_current_guess(curr_guess)
+
+        print(self.guesses)
+        print(self.responses)
 
 
 
