@@ -3,6 +3,7 @@ from tkinter import font  as tkfont # python 3
 from tkinter import messagebox
 # from combinatorics import all_colours
 import random
+import numpy
 
 class SampleApp(Tk):
 
@@ -10,7 +11,7 @@ class SampleApp(Tk):
         Tk.__init__(self, *args, **kwargs)
         self.title("Mastermind")
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold")
-        container = Frame(self)
+        container = Frame(self, width=200,height=100)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -18,6 +19,7 @@ class SampleApp(Tk):
         self.combo = []
         self.num_pegs = 0
         self.num_cols = 0
+        self.possible_cols = []
         self.frames = {}
         for F in (StartPage, ComboSelection, PlayGame):
             page_name = F.__name__
@@ -53,10 +55,6 @@ class StartPage(Frame):
         buttonNum_cols_lbl.pack()
         buttonNum_cols.pack()
         sub.pack()
-
-        # button1 = Button(self, text="Select your color code",
-        #                     command=lambda: controller.show_frame("ComboSelection"))
-        # button1.pack()
 
     def set_nums(self, pegs, cols, controller):
         # print (int(pegs))
@@ -99,10 +97,9 @@ class ComboSelection(Frame):
             button.pack()
             i = i+1
 
+        controller.possible_cols = colors[0:controller.num_cols]
         buttonOK = Button(self, text="OK", command=lambda: self.setCombo(controller))
-        # buttonPlay = Button(self, text="Let's play!", command=lambda: controller.show_frame("PlayGame"))
         buttonOK.pack(pady=10)
-        # buttonPlay.pack(pady=10)
 
     def selectCombo(self, color, controller):
         self.colorsSelected = self.colorsSelected + 1
@@ -118,101 +115,282 @@ class ComboSelection(Frame):
 
 
 class PlayGame(Frame):
-
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
         self.combo = []
-
-        self.letsGo = Button(self, text="Let's Play!", command= lambda: self.init_gui_game(controller))
+        self.guesses = []
+        self.responses = []
+        self.letsGo = Button(self, text="Let's Play!", command= lambda: self.init_gui_game())
         self.letsGo.place(relx=0.5, rely=0.5, anchor=CENTER)
+        self.most_recent_guess = []
+        self.grid_columnconfigure(1, minsize=50)  # Here
         
-    def init_gui_game(self, controller):
-        self.show_my_combo(controller)
+        self.P_CROSS_OVER = 0.5
+        self.P_INVERT = 0.03
+        self.P_MUTATE = 0.03
+        self.P_PERMUTE = 0.03
+        self.MAX_GEN = 100
+        self.MAX_POP = 60
+        self.REQ_FIT = 1
+
+
+    def init_gui_game(self):
+        self.show_my_combo()
         self.letsGo.destroy()
 
         row_offset = 1
-        number_of_positions = controller.num_pegs
+        number_of_positions = self.controller.num_pegs
         
         entryLabel = Label(self, text="Completely Correct:")
         entryLabel.grid(row=row_offset+2, sticky=E, padx=5, column=number_of_positions + 7)
-        entryWidget_both = Entry(self)
-        entryWidget_both["width"] = 5
-        entryWidget_both.grid(row=row_offset+2, column=number_of_positions + 8)
+        entryWidget_both = Entry(self, width=5)
+        entryWidget_both.grid(row=row_offset+2, column=number_of_positions + 8, padx=(0,20))
         
         entryLabel2 = Label(self, text= "Wrong Position:")
         entryLabel2.grid(row=row_offset+4, sticky=E, padx=5, column= number_of_positions + 7)
-        entryWidget_only_colours = Entry(self)
-        entryWidget_only_colours["width"] = 5
-        entryWidget_only_colours.grid(row=row_offset+4, column=number_of_positions + 8)            
+        entryWidget_only_colours = Entry(self, width=5)
+        entryWidget_only_colours.grid(row=row_offset+4, column=number_of_positions + 8, padx=(0,20))            
 
-        colors = ["navy", "gray", "maroon", "blue", "orange", "red", "magenta", "green", "purple", "yellow"]
+        # colors = ["navy", "gray", "maroon", "blue", "orange", "red", "magenta", "green", "purple", "yellow"]
         init_guess = []
-
-        while len(init_guess) < controller.num_pegs:
-            i = random.randint(0, controller.num_cols)
-            if colors[i] not in init_guess:
-                init_guess.append(colors[i])
+        # print (('{}').format(self.controller.possible_cols))
+        while len(init_guess) < self.controller.num_pegs:
+            i = random.randint(0, self.controller.num_cols-1)
+            if i not in init_guess:
+                init_guess.append(i)
 
         self.most_recent_guess = init_guess
+        self.guesses.append(init_guess)
+
         submit_button = Button(self, text="Submit")
         submit_button["command"] = lambda: self.eval_guess(entryWidget_both.get(), entryWidget_only_colours.get(), self.most_recent_guess)
         submit_button.grid(row=6,column=number_of_positions + 7)
 
         quit_button = Button(self, text="Quit", command=self.quit)
-        quit_button.grid(row=6,column=number_of_positions + 8)
+        quit_button.grid(row=6,column=number_of_positions + 8, padx=(0,20))
 
         self.show_current_guess(init_guess)
 
 
-
-    def show_my_combo(self, controller):
+    def show_my_combo(self):
         row = 2 
         Label(self, text="   Your combo is   ").grid(row=row, column=0, columnspan=6)
         row +=1
-        col_count = 1
-        for c in controller.combo:
-            print(c)
-            l = Label(self, text="    ", bg=c)
-            l.grid(row=row,column=col_count,  sticky=W, padx=2)
-            col_count += 1
-
-
-    def show_current_guess(self, new_guess):
-        row = 4
-        Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=6)
-        row +=1
-        col_count = 1
-        for c in new_guess:
+        col_count = 2
+        for c in self.controller.combo:
             # print(c)
             l = Label(self, text="    ", bg=c)
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
 
+    def idx_to_cols(self, guess):
+        cols = []
+        for i in guess:
+            cols.append(self.controller.possible_cols[i-1])
+        return cols
+
+    def show_current_guess(self, new_guess):
+        row = 4
+        Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=6)
+        row +=1
+        col_count = 2
+        guess = self.idx_to_cols(new_guess)
+        for c in guess:
+            # print(c)
+            l = Label(self, text="    ", bg=c)
+            l.grid(row=row,column=col_count,  sticky=W, padx=2)
+            col_count += 1
+        self.view_old_guesses()
+
+    def view_old_guesses(self):
+        row = 6
+        number_of_positions = self.controller.num_pegs
+        Label(self, text="   Old Guesses:   ").grid(row=row, column=0, columnspan=6)
+        Label(self, text="Color & Position").grid(row=row, padx=5, column=number_of_positions + 3)
+        Label(self, text="Color Only").grid(row=row, padx=5, column=number_of_positions + 4)
+
+        for idx in range(len(self.guesses)-2, -1, -1):
+            print (('{}').format(self.guesses[idx]))
+            guess = self.idx_to_cols(self.guesses[idx])
+            print (('{}').format(guess))
+            row += 1
+            col_count = 2
+            
+            for c in guess:
+                l = Label(self, text="    ", bg=c)
+                l.grid(row=row,column=col_count, pady=2, sticky=W, padx=2)
+                col_count += 1
+            
+            col_count += 1
+            for i in self.responses[idx]:
+                l = Label(self, text=i)
+                l.grid(row=row,column=col_count, padx=2)  
+                col_count += 1    
 
     def eval_guess(self, both, colors, most_recent_guess):
         if len(both) == 0:
             both = 0
         if len(colors) == 0:
             colors = 0
-        eval_result = (both, colors)
-
-        self.create_new_guess(eval_result, self.most_recent_guess) 
+        eval_result = [int(both), int(colors)]
+        if int(both) == self.controller.num_pegs:
+            messagebox.showinfo("Game Over!", "Your combination was discovered.")
+            self.quit()
+        else:   
+            self.responses.append(eval_result)
+            self.AI_play(self.responses, self.guesses) 
         
 
-    ### eval_result is a tuple of (# color+position, #color only) of the most recent guess
-    ### most_recent_guess is an array of the colors of the most recent guess
-    def create_new_guess(self, eval_result, most_recent_guess):
-        print ("the most recent guess is '{}'".format(most_recent_guess))
+    def remove_dups(self, mylist):
+        seen = set()
+        newlist = []
+        for item in mylist:
+            t = tuple(item)
+            if t not in seen:
+                newlist.append(item)
+                seen.add(t)
+        return newlist
+
+
+    def cross_over(self, g1,g2, n_peg):
+        #if random.random() < P_CROSS_OVER:
+        cross_loc = random.randint(1, n_peg-1)
+        new_g1 = g1[0:cross_loc] + g2[cross_loc:]
+        new_g2 = g2[0:cross_loc] + g1[cross_loc:]
+        return([new_g1, new_g2])
+
+
+    def mutate(self, g1, n_peg, n_col):
+        if(random.random() < self.P_MUTATE):
+            loc = random.randint(0, n_peg-1)
+            col = random.randint(1, n_col)
+            g1[loc] = col
+        return(g1)
+
+    def get_fitness(self, prev_guesses, g2, responses, n_peg):
+        a = 1
+        b = 2
+        X_vals = []
+        Y_vals = []
+        for i in range(len(prev_guesses)):
+            g1 = prev_guesses[i][:]
+
+            X_i = responses[i][0]
+            Y_i = responses[i][1]
+            Xi_g2 = 0
+            Yi_g2 = 0
+
+            for i in range(len(g1)):
+                if(g2[i] == g1[i]):
+                    Xi_g2 += 1
+                    g1[i] = 0
+                elif g2[i] in g1:
+                    Yi_g2 += 1
+                    idx = g1.index(g2[i])
+                    g1[idx] = 0
+
+            X_vals.append(abs(Xi_g2 - X_i))
+            Y_vals.append(abs(Yi_g2 - Y_i))
+
+        fitness_g2 = a * sum(X_vals) + sum(Y_vals) + b * n_peg * (len(prev_guesses) -1)
+        return(fitness_g2)
+
+
+    def GA(self, n_peg, n_col, prev_guesses, responses):
+        # print("new GA iter")
+    # fitne'ss fxn that's inversely proportional to the difference between the solution and the value a decoded chromosome represents
+
+        # initialize the population and remove any duplicates
+        population = [[random.randint(1, n_col) for i in range(n_peg)] for j in range(self.MAX_POP)]
         
-        ## in the end set the line below to the result (the green stuff is a placeholder)
-        self.most_recent_guess = ["green", "green", "green", "green"]
+        # h = iteration number
+        h = 1
+        # E = set of eligible/elite codes at iteration h
+        E_h = []
+        
+        while(h <= self.MAX_GEN and len(E_h) <= self.MAX_POP):
+            # first evaluate the population and take some of the best + some random
+            fitness = []
+            for indiv in population:
+                fitness.append(self.get_fitness(prev_guesses, indiv, responses, n_peg))
+
+            # the new generation will contain some of the best indivs in this gen + randoms,
+            # crossed over offspring of some,
+            # mutations of some
+            # use fitness values as probabilities to choose best indivs to keep same
+            pop_elts = list(range(len(population)))
+            probs = [x / sum(fitness) for x in fitness]
+            ng = numpy.random.choice(pop_elts, size = int(self.MAX_POP*(1-self.P_CROSS_OVER)), replace=False, p = probs)
+            
+            new_gen = [population[i] for i in ng]
+            
+            # select parents from previous gen using fitness values as probabilities
+            par = numpy.random.choice(pop_elts, size= int(self.MAX_POP*self.P_CROSS_OVER-10), replace=False, p = probs)
+            # add some random indiv to parental pool promote genetic diversity
+            parents = [population[i] for i in par]
+
+            while len(parents) < self.MAX_POP*self.P_CROSS_OVER:
+                parents.append([random.randint(1, n_col) for i in range(n_peg)])
+
+            random.shuffle(parents)
+
+            children = []
+            i = 0
+            while i < len(parents):
+                child = self.cross_over(parents[i], parents[i+1], n_peg)
+                if random.random() <= self.P_MUTATE:
+                    child = [self.mutate(child[0],n_peg, n_col), self.mutate(child[1],n_peg, n_col)]
+                children.extend(child)
+                i += 2
+
+            # add the kids to the new population
+            new_gen.extend(children)
+
+            #get fitness of the elements in this new gen
+            fitness = []
+            for indiv in new_gen:
+                fitness.append(self.get_fitness(prev_guesses,indiv, responses, n_peg))
+            # print("new gen:" + str(new_gen))
+            # print("fitness vals:" + str(fitness))
+            # add eligible codes to E_h e.g. codes with fitness above a required value
+            for f in range(len(fitness)):
+                if fitness[f] >= self.REQ_FIT:
+                    E_h.append(new_gen[f])
+
+            # remove dups in eligibles
+            E_h = self.remove_dups(E_h)
+
+            population = E_h
+            # fill remaining spot with random and remove duplicates again
+            while len(population) < self.MAX_POP:
+                population.append([random.randint(1, n_col) for i in range(n_peg)])
+                population = self.remove_dups(population)
+
+        return E_h
+
+
+    def AI_play(self, responses, guesses):
+        n_col = self.controller.num_cols
+        n_peg = self.controller.num_pegs
+
+        X_i = responses[-1][0]
+        Y_i = responses[-1][1]
+        if(X_i != n_peg):
+            options = self.GA(n_peg, n_col, guesses, responses)
+            curr_guess = options[1]
+
+        # curr_guess = ["green", "green", "green", "green", "green", "green"]
+        print (curr_guess)
+        self.most_recent_guess = curr_guess
+        self.guesses.append(curr_guess)
+        self.show_current_guess(curr_guess)
 
 
 
 
 
-    # def new_evaluation(self, current_colour_choices):
+    # def new_evaluation(self, current_colour_choices, controller):
     #     rightly_positioned, permutated = get_evaluation()
     #     if rightly_positioned == number_of_positions:
     #         return(current_colour_choices, (rightly_positioned, permutated))
@@ -224,7 +402,7 @@ class PlayGame(Frame):
     #     view_guesses()
   
     #     current_colour_choices = create_new_guess() 
-    #     self.show_current_guess(current_colour_choices)
+    #     self.show_current_guess(current_colour_choices, controller)
     #     if not current_colour_choices:
     #         return(current_colour_choices, (-1, permutated))
     #     return(current_colour_choices, (rightly_positioned, permutated))
