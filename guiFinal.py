@@ -278,9 +278,9 @@ class PlayGame(Frame):
         b = 2
         X_vals = []
         Y_vals = []
-        g2 = this_option[:]
         for i in range(len(prev_guesses)):
             g1 = prev_guesses[i][:]
+            g2 = this_option[:]
 
             X_i = responses[i][0]
             Y_i = responses[i][1]
@@ -385,22 +385,23 @@ class PlayGame(Frame):
         n_col = self.controller.num_cols
         n_peg = self.controller.num_pegs
 
+        print("prev guesses: " + str(self.guesses))
+        print("reponses: "   + str(self.responses))
+
         X_i = responses[-1][0]
         Y_i = responses[-1][1]
         if(X_i != n_peg):
-            options = self.GA(n_peg, n_col, guesses, responses)
-            curr_guess = options
-            fitcg = self.get_fitness(self.guesses, curr_guess, self.responses, n_peg)
-            print("fitness of choson: " + str(fitcg))
 
-        # curr_guess = ["green", "green", "green", "green", "green", "green"]
-        #print ("guess in here is '{}'".format(curr_guess))
+            #if(Y_i == n_peg):
+            #    curr_guess = 
+
+            curr_guess = self.GA(n_peg, n_col, guesses, responses)
+            fitcg = self.get_fitness(self.guesses, curr_guess, self.responses, n_peg)
+            print("fitness of new guess: " + str(curr_guess) + str(fitcg))
+
         self.most_recent_guess = curr_guess
         self.guesses.append(curr_guess)
         self.show_current_guess(curr_guess)
-
-        print(self.guesses)
-        print(self.responses)
 
 
 
