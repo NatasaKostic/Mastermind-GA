@@ -57,7 +57,7 @@ class StartPage(Frame):
         sub.pack()
 
     def set_nums(self, pegs, cols, controller):
-        # print (int(pegs))
+
         if len(pegs) == 0:
             messagebox.showinfo("Default selection", "Default number for pegs: 4")
             pegs = 4
@@ -130,7 +130,7 @@ class PlayGame(Frame):
         self.P_INVERT = 0.03
         self.P_MUTATE = 0.03
         self.P_PERMUTE = 0.03
-        self.MAX_GEN = 150
+        self.MAX_GEN = 100
         self.MAX_POP = 150
         self.REQ_FIT = 1
 
@@ -178,7 +178,6 @@ class PlayGame(Frame):
         row +=1
         col_count = 2
         for c in self.controller.combo:
-            # print(c)
             l = Label(self, text="    ", bg=c)
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
@@ -194,11 +193,8 @@ class PlayGame(Frame):
         Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=6)
         row +=1
         col_count = 2
-        #print (("new guess is: '{}'").format(new_guess))
         guess = self.idx_to_cols(new_guess)
-        #print (("new guess2 is: '{}'").format(guess))
         for c in guess:
-            # print(c)
             l = Label(self, text="    ", bg=c)
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
@@ -212,9 +208,7 @@ class PlayGame(Frame):
         Label(self, text="Color Only").grid(row=row, padx=5, column=number_of_positions + 4)
 
         for idx in range(len(self.guesses)-2, -1, -1):
-            # print (('{}').format(self.guesses[idx]))
             guess = self.idx_to_cols(self.guesses[idx])
-            # print (('{}').format(guess))
             row += 1
             col_count = 2
             
@@ -385,127 +379,14 @@ class PlayGame(Frame):
         n_col = self.controller.num_cols
         n_peg = self.controller.num_pegs
 
-        print("prev guesses: " + str(self.guesses))
-        print("reponses: "   + str(self.responses))
-
         X_i = responses[-1][0]
         Y_i = responses[-1][1]
         if(X_i != n_peg):
-
-            #if(Y_i == n_peg):
-            #    curr_guess = 
-
             curr_guess = self.GA(n_peg, n_col, guesses, responses)
-            fitcg = self.get_fitness(self.guesses, curr_guess, self.responses, n_peg)
-            print("fitness of new guess: " + str(curr_guess) + str(fitcg))
 
         self.most_recent_guess = curr_guess
         self.guesses.append(curr_guess)
         self.show_current_guess(curr_guess)
-
-
-
-
-
-    # def new_evaluation(self, current_colour_choices, controller):
-    #     rightly_positioned, permutated = get_evaluation()
-    #     if rightly_positioned == number_of_positions:
-    #         return(current_colour_choices, (rightly_positioned, permutated))
-  
-    #     if not reasonable(rightly_positioned, permutated):
-    #         print("Input Error: Sorry, the input makes no sense")
-    #         return(current_colour_choices, (-1, permutated))
-    #     guesses.append((current_colour_choices, (rightly_positioned, permutated)))
-    #     view_guesses()
-  
-    #     current_colour_choices = create_new_guess() 
-    #     self.show_current_guess(current_colour_choices, controller)
-    #     if not current_colour_choices:
-    #         return(current_colour_choices, (-1, permutated))
-    #     return(current_colour_choices, (rightly_positioned, permutated))
-
-
-    # def inconsistent(p, guesses):
-    #     for guess in guesses:
-    #       res = check(guess[0], p)
-    #       (rightly_positioned, permutated) = guess[1]
-    #     if res != [rightly_positioned, permutated]:
-    #      return True # inconsistent
-    #     return False # i.e. consistent
-
-
-    # def reasonable(right, color):
-    #     return not ((right + color > 4) or (right + color < 2) or (right == 3 and color == 1))
-
-    # def check(p1, p2):
-    #     blacks = 0
-    #     whites = 0
-    #     for i in range(len(p1)):
-    #         if p1[i] == p2[i]:
-    #             blacks += 1
-    #         else:
-    #             if p1[i] in p2:
-    #                 whites += 1
-    #     return [blacks, whites] 
-
-
-    # def create_new_guess():
-    #     next_choice = next(permutation_iterator) 
-    #     while inconsistent(next_choice, guesses):
-    #       try:
-    #          next_choice = next(permutation_iterator)
-    #       except StopIteration:
-    #          print("Error: Your answers were inconsistent!")
-    #          return ()
-    #     return next_choice
-
-
-    # def new_evaluation_tk():
-    #     global current_colour_choices
-    #     res = new_evaluation(current_colour_choices)
-    #     current_colour_choices = res[0]
-
-
-    # def show_current_guess(self, new_guess):
-    #     row = 1 
-    #     Label(self, text="   New Guess:   ").grid(row=row, column=0, columnspan=4)
-    #     row +=1
-    #     col_count = 0
-    #     for c in new_guess:
-    #         print(c)
-    #         l = Label(self, text="    ", bg=c)
-    #         l.grid(row=row,column=col_count,  sticky=W, padx=2)
-    #         col_count += 1
-
-
-    # def view_guesses():
-    #     row = 3
-    #     Label(self, text="Old Guesses").grid(row=row, column=0, columnspan=4)
-    #     Label(self, text="c&p").grid(row=row, padx=5, column=number_of_positions + 1)
-    #     Label(self, text="p").grid(row=row, padx=5, column=number_of_positions + 2)
-        
-    #     # dummy label for distance:
-    #     Label(self, text="         ").grid(row=row, column=number_of_positions + 3)
-
-
-    #     row += 1
-    #     # vertical dummy label for distance:
-    #     Label(self, text="             ").grid(row=row, column=0, columnspan=5)
-
-    #     for guess in guesses:
-    #         guessed_colours = guess[0]
-    #         col_count = 0
-    #         row += 1
-    #         for c in guessed_colours:
-    #             print(guessed_colours[col_count])
-    #             l = Label(self, text="    ", bg=guessed_colours[col_count])
-    #             l.grid(row=row,column=col_count,  sticky=W, padx=2)
-    #             col_count += 1
-    #       # evaluation:
-    #         for i in (0,1):
-    #             l = Label(self, text=str(guess[1][i]))
-    #             l.grid(row=row,column=col_count + i + 1, padx=2)
-
 
 
 if __name__ == "__main__":
