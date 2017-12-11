@@ -9,7 +9,7 @@ class Mastermind(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title("Mastermind")
-        self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold")
+        self.title_font = tkfont.Font(family='MS Sans Serif', size=23, weight="bold")
         container = Frame(self, width=200,height=100)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
