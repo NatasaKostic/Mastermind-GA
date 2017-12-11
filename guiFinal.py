@@ -130,7 +130,7 @@ class PlayGame(Frame):
         self.P_INVERT = 0.03
         self.P_MUTATE = 0.03
         self.P_PERMUTE = 0.03
-        self.MAX_GEN = 100
+        self.MAX_GEN = 150
         self.MAX_POP = 150
         self.REQ_FIT = 1
 
@@ -363,29 +363,22 @@ class PlayGame(Frame):
             fitness = []
             for indiv in new_gen:
                 fitness.append((indiv,self.get_fitness(prev_guesses,indiv, responses, n_peg)))
+            
             # eligible individuals have a fitness of 0
             for (indiv,f) in fitness:
                 if f == 0:
-                    E_h.append((indiv,f))
+                    E_h.append(indiv)
 
             # remove dups in eligibles
-            #print("removing dups")
-            #print(len(E_h))
-            #E_h = self.remove_dups(E_h)
-            #print("len of Eh after: " + str(len(E_h)))
-            
-            #population = E_h
-            population = [i[0] for i in E_h]
+            E_h = self.remove_dups(E_h)
+
+            population = E_h[:]
             # fill remaining spot with random and remove duplicates again
             while len(population) < self.MAX_POP:
                 population.append([random.randint(1, n_col) for i in range(n_peg)])
                 population = self.remove_dups(population)
 
-        print(len(E_h))
-        # Eh should only contain codes with score = 0
-        #for elt in E_h:
-        #    print(self.get_fitness(prev_guesses,elt, responses, n_peg))
-        return E_h[0][0]
+        return E_h[0]
 
 
     def AI_play(self, responses, guesses):
