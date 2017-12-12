@@ -8,8 +8,10 @@ It is a version of the famous board game Mastermind. A description of the rules 
 The algorithm used to develop the algorithm was the Genetic Algorithm. The package used for the GUI was Python's tkinter.
 
 ## Requirements
-Python version 3+
+Python version 3+ 
+
 Python tkinter package
+
 If you do not have it installed: `pip install tkinter`
 
 ## Playing the game
