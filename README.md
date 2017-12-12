@@ -9,6 +9,8 @@ The algorithm used to develop the algorithm was the Genetic Algorithm. The packa
 
 ## Requirements
 Python version 3+
+Python tkinter package
+If you do not have it installed: `pip install tkinter`
 
 ## Playing the game
 The file to run for playing the game is *guiFinal.py*.
