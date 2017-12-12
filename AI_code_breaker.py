@@ -9,7 +9,7 @@ P_CROSS_OVER = 0.5
 P_INVERT = 0.03
 P_MUTATE = 0.03
 P_PERMUTE = 0.03
-MAX_GEN = 100
+MAX_GEN = 80
 MAX_POP = 60
 REQ_FIT = 1
 
@@ -45,9 +45,9 @@ def get_fitness(prev_guesses, this_option, responses, n_peg):
 	b = 2
 	X_vals = []
 	Y_vals = []
-	g2 = this_option[:]
 	for i in range(len(prev_guesses)):
 		g1 = prev_guesses[i][:]
+		g2 = this_option[:]
 
 		X_i = responses[i][0]
 		Y_i = responses[i][1]
@@ -68,7 +68,7 @@ def get_fitness(prev_guesses, this_option, responses, n_peg):
 		X_vals.append(abs(Xi_g2 - X_i))
 		Y_vals.append(abs(Yi_g2 - Y_i))
 
-	fitness_g2 = a * sum(X_vals) + sum(Y_vals) + b * n_peg * (len(prev_guesses) -1)
+	fitness_g2 = a * sum(X_vals) + sum(Y_vals) #+ b * n_peg * (len(prev_guesses) -1)
 	return(fitness_g2)
 
 
@@ -134,16 +134,17 @@ def GA(n_peg, n_col, prev_guesses, responses):
 		#get fitness of the elements in this new gen
 		fitness = []
 		for indiv in new_gen:
-			fitness.append(get_fitness(prev_guesses,indiv, responses, n_peg))
+			fitness.append((indiv,get_fitness(prev_guesses,indiv, responses, n_peg)))
+		
 		# add eligible codes to E_h e.g. codes with fitness above a required value
-		for f in range(len(fitness)):
-			if fitness[f] == 0:
-				E_h.append(new_gen[f])
+		for (indiv,f) in fitness:
+			if f == 0:
+				E_h.append(indiv)
 
 		# remove dups in eligibles
 		E_h = remove_dups(E_h)
 
-		population = E_h
+		population = E_h[:]
 		# fill remaining spot with random and remove duplicates again
 		while len(population) < MAX_POP:
 			population.append([random.randint(1, n_col) for i in range(n_peg)])
@@ -160,7 +161,10 @@ def AI_play(guesses, n_col, n_peg, responses):
 	Y_i = responses[-1][1]
 	if(X_i != n_peg):
 		options = GA(n_peg, n_col, guesses, responses)
-		curr_guess = options[1]
+		curr_guess = options[0]
+	else:
+		print("AI won!")
+		return []
 
 	return curr_guess
 
@@ -212,6 +216,8 @@ def play(n_col, n_peg, n_turns):
 
 		elif turn % 2 == 0:
 			guess = AI_play(guesses, n_col, n_peg, responses)
+			if guess == []:
+				break
 			print("AI guess:" + str(guess))
 			guesses.append(guess)
 
@@ -222,7 +228,7 @@ def play(n_col, n_peg, n_turns):
 			# show the response on the GUI
 
 		turn += 1
-
+	return turn
 
 def main():
 
@@ -232,7 +238,18 @@ def main():
 	# the number of pegs that can be used in a code
 	num_pegs = int(sys.argv[2])
 
-	play(num_colors, num_pegs, 8)
+	num_rounds = {"failed":0}
+	for i in range(100):
+		try:
+			turn = play(num_colors, num_pegs, 20)
+			if (turn/2) in num_rounds:
+				num_rounds[turn/2] += 1
+			else:
+				num_rounds[turn/2] = 1
+		except:
+			num_rounds["failed"] += 1
+
+	print (num_rounds)
 
 
 
