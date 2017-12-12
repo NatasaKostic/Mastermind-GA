@@ -223,12 +223,36 @@ class PlayGame(Frame):
         if len(colors) == 0:
             colors = 0
         eval_result = [int(both), int(colors)]
-        if int(both) == self.controller.num_pegs:
-            messagebox.showinfo("Game Over!", "Your combination was discovered.")
-            self.quit()
-        else:   
-            self.responses.append(eval_result)
-            self.AI_play(self.responses, self.guesses) 
+        
+        col_guess = self.idx_to_cols(most_recent_guess)
+        right_num_cols = 0
+        right_num_both = 0
+        filter_guess = []
+        filter_combo = []
+        
+        for i in range(self.controller.num_pegs):
+            if self.controller.combo[i] == col_guess[i]:
+                right_num_both += 1
+            else:
+                filter_guess.append(col_guess[i])
+                filter_combo.append(self.controller.combo[i])
+
+        filter_col = []
+
+        for j in range(len(filter_combo)):
+            if filter_guess[j] not in filter_col:
+                right_num_cols += filter_combo.count(filter_guess[j])
+                filter_col.append(filter_guess[j])
+
+        if right_num_cols != eval_result[1] or right_num_both != eval_result[0]:
+            messagebox.showinfo("Hey now!", "Check your responses!")
+        else:
+            if int(both) == self.controller.num_pegs:
+                messagebox.showinfo("Game Over!", "Your combination was discovered.")
+                self.quit()
+            else:   
+                self.responses.append(eval_result)
+                self.AI_play(self.responses, self.guesses) 
 
 #################################################################################
 # GENETIC ALGORITHM FUNCTIONS
