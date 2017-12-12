@@ -133,6 +133,11 @@ class PlayGame(Frame):
         self.show_my_combo()
         self.letsGo.destroy()
 
+        if self.controller.num_pegs == 5:
+        	self.MAX_GEN = 150
+        	self.MAX_POP = 200
+
+
         row_offset = 1
         number_of_positions = self.controller.num_pegs
         
