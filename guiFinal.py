@@ -237,12 +237,10 @@ class PlayGame(Frame):
                 filter_guess.append(col_guess[i])
                 filter_combo.append(self.controller.combo[i])
 
-        filter_col = []
-
         for j in range(len(filter_combo)):
-            if filter_guess[j] not in filter_col:
-                right_num_cols += filter_combo.count(filter_guess[j])
-                filter_col.append(filter_guess[j])
+            if filter_guess[j] in filter_combo:
+                right_num_cols += 1
+                filter_combo.remove(filter_guess[j])
 
         if right_num_cols != eval_result[1] or right_num_both != eval_result[0]:
             messagebox.showinfo("Hey now!", "Check your responses!")
