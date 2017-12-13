@@ -209,7 +209,7 @@ def play(n_col, n_peg, n_turns, code):
 			# colors = range(1,n_col)
 			# guess = list(numpy.random.choice(colors, n_peg))
 			# print (guess)
-			guess = [1,2,2,2]
+			guess = [1,2,1,4]
 			guesses.append(guess)
 			print("AI guess:" + str(guess))
 
@@ -243,7 +243,7 @@ def main():
 
 	num_rounds = {"failed":0}
 
-	for i in range(500):
+	for i in range(1000):
 		try:
 			colors = range(1,num_colors)
 			code = list(numpy.random.choice(colors, num_pegs))

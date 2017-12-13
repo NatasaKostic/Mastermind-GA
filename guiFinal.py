@@ -165,13 +165,14 @@ class PlayGame(Frame):
         entryWidget_only_colours = Entry(self, width=5, highlightbackground="SkyBlue1")
         entryWidget_only_colours.grid(row=row_offset+4, column=number_of_positions + 8, padx=(0,20))            
 
-        init_guess = []
-        
         # Create a random initial guess
-        while len(init_guess) < self.controller.num_pegs:
-            i = random.randint(1, self.controller.num_cols)
-            if i not in init_guess:
-                init_guess.append(i)
+        # init_guess = []
+        # while len(init_guess) < self.controller.num_pegs:
+            # i = random.randint(1, self.controller.num_cols)
+            # if i not in init_guess:
+                # init_guess.append(i)
+
+        init_guess = [1,2,1,4]
 
         self.most_recent_guess = init_guess
 
@@ -448,7 +449,7 @@ if __name__ == "__main__":
 
 
 
-
+# Helpful source for GUI: https://www.python-course.eu/tkinter_mastermind.php
 
 
 
