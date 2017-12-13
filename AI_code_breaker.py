@@ -6,12 +6,9 @@ import tkinter
 import random
 
 P_CROSS_OVER = 0.5
-P_INVERT = 0.03
 P_MUTATE = 0.03
-P_PERMUTE = 0.03
-MAX_GEN = 80
+MAX_GEN = 160
 MAX_POP = 60
-REQ_FIT = 1
 
 
 def remove_dups(mylist):
@@ -198,7 +195,7 @@ def person_play(guess, code):
 
 
 # method that controls the alternating turns
-def play(n_col, n_peg, n_turns):
+def play(n_col, n_peg, n_turns, code):
 	
 	turn = 0
 	response = None
@@ -209,8 +206,10 @@ def play(n_col, n_peg, n_turns):
 
 		if turn == 0:
 			#code = start_game()
-			colors = range(1,n_col)
-			guess = list(numpy.random.choice(colors, n_peg))
+			# colors = range(1,n_col)
+			# guess = list(numpy.random.choice(colors, n_peg))
+			# print (guess)
+			guess = [1,2,2,2]
 			guesses.append(guess)
 			print("AI guess:" + str(guess))
 
@@ -223,7 +222,11 @@ def play(n_col, n_peg, n_turns):
 
 		else:
 			# GET reponse from GUI
-			response = person_play(guess, [1,2,2,4])
+			# response = person_play(guess, [1,2,2,4])
+
+			# different code each time
+			response = person_play(guess, code)
+
 			responses.append(response)
 			# show the response on the GUI
 
@@ -239,9 +242,14 @@ def main():
 	num_pegs = int(sys.argv[2])
 
 	num_rounds = {"failed":0}
-	for i in range(100):
+
+	for i in range(500):
 		try:
-			turn = play(num_colors, num_pegs, 20)
+			colors = range(1,num_colors)
+			code = list(numpy.random.choice(colors, num_pegs))
+			print (code)
+			turn = play(num_colors, num_pegs, 20, code)
+			
 			if (turn/2) in num_rounds:
 				num_rounds[turn/2] += 1
 			else:

@@ -1,11 +1,12 @@
 from tkinter import *                # python 3
-from tkinter import font  as tkfont # python 3
+from tkinter import font  as tkfont  # python 3
 from tkinter import messagebox
 import random
 import numpy
 
 class Mastermind(Tk):
 
+    # Initializes the controller for the game, which brings the appopriate frame forward
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
         self.title("Mastermind")
@@ -20,6 +21,8 @@ class Mastermind(Tk):
         self.num_cols = 0
         self.possible_cols = []
         self.frames = {}
+
+        # Initialize the different frames of the game
         for F in (StartPage, ComboSelection, PlayGame):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
@@ -29,6 +32,7 @@ class Mastermind(Tk):
 
         self.show_frame("StartPage")
 
+    # Brings the frame requested forward for user to interact
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
@@ -36,6 +40,7 @@ class Mastermind(Tk):
 
 class StartPage(Frame):
 
+    # Initializes the frame where the user can pick 4-peg or 5-peg version
     def __init__(self, parent, controller):
         Frame.__init__(self, parent, width=500, height=500, bg="SkyBlue1")
         self.controller = controller
@@ -52,23 +57,25 @@ class StartPage(Frame):
         v4.pack()
         v5.pack()
 
+    # Sets the number of pegs and colors for the game. If the user selected 4 pegs, they can choose 
+    # from 6 colors, if they selected 5 pegs, they can choose from 8 colors 
     def set_nums(self, pegs):
-
         if pegs == 4:
             cols = 6
         else:
             cols = 8
-        
         self.controller.num_pegs = pegs
         self.controller.num_cols = cols
         self.controller.show_frame("ComboSelection")
 
 class ComboSelection(Frame):
 
+    # Initializes the frame in which the user can select a combination
     def __init__(self, parent, controller):
         Frame.__init__(self, parent, bg="SkyBlue1")
         self.controller = controller
-        
+       
+        # Dummy labels for distance 
         dummy1 = Label(self, text = "    ", bg="SkyBlue1")
         dummy2 = Label(self, text = "    ", bg="SkyBlue1")
         dummy3 = Label(self, text = "    ", bg="SkyBlue1")
@@ -86,6 +93,8 @@ class ComboSelection(Frame):
 
         colors = ["navy", "gray", "maroon", "blue", "orange", "red", "magenta", "green", "purple", "yellow"]
         i = 0
+
+        # Depending on the number of pegs, show 6 or 8 colors for user to choose from
         while i < controller.num_cols:
             button = Button(self, text=colors[i].title(), highlightbackground="SkyBlue1", command=lambda i=i: self.selectCombo(colors[i], controller))
             button.pack()
@@ -95,20 +104,26 @@ class ComboSelection(Frame):
         buttonOK = Button(self, text="OK", highlightbackground="SkyBlue1", command=lambda: self.setCombo(controller))
         buttonOK.pack(pady=10)
 
+    # Adds a specific color to the combination of the user
     def selectCombo(self, color, controller):
         self.colorsSelected = self.colorsSelected + 1
+
+        # If the user selects more than the specified number, show a pop-up message
         if self.colorsSelected <= controller.num_pegs:
             self.combo.append(color)
         else:
             msg = "Looks like you have already selected a combination of " + str(controller.num_pegs) + " colors!"
             messagebox.showwarning("Oops!", msg)
 
+    # Sets the final combination
     def setCombo(self, controller):
         controller.combo = self.combo
         controller.show_frame("PlayGame")
 
 
 class PlayGame(Frame):
+
+    # Initializes the game-playing frame
     def __init__(self, parent, controller):
         Frame.__init__(self, parent, bg="SkyBlue1")
         self.controller = controller
@@ -118,25 +133,24 @@ class PlayGame(Frame):
         self.letsGo = Button(self, text="Let's Play!", highlightbackground="SkyBlue1", command= lambda: self.init_gui_game())
         self.letsGo.place(relx=0.5, rely=0.5, anchor=CENTER)
         self.most_recent_guess = []
-        self.grid_columnconfigure(1, minsize=50)  # Here
+        self.grid_columnconfigure(1, minsize=50)
         
+        # Initialize parameters for Genetic Algorithm
         self.P_CROSS_OVER = 0.5
-        self.P_INVERT = 0.03
         self.P_MUTATE = 0.03
-        self.P_PERMUTE = 0.03
         self.MAX_GEN = 100
         self.MAX_POP = 150
-        self.REQ_FIT = 1
 
 
+    # GUI Implementation of game
     def init_gui_game(self):
         self.show_my_combo()
         self.letsGo.destroy()
 
+        # Increase parameters for GA if 5-peg version is chosen
         if self.controller.num_pegs == 5:
         	self.MAX_GEN = 150
         	self.MAX_POP = 200
-
 
         row_offset = 1
         number_of_positions = self.controller.num_pegs
@@ -153,12 +167,15 @@ class PlayGame(Frame):
 
         init_guess = []
         
+        # Create a random initial guess
         while len(init_guess) < self.controller.num_pegs:
             i = random.randint(1, self.controller.num_cols)
             if i not in init_guess:
                 init_guess.append(i)
 
         self.most_recent_guess = init_guess
+
+        # Add to the list of all guesses
         self.guesses.append(init_guess)
 
         submit_button = Button(self, text="Submit", highlightbackground="SkyBlue1")
@@ -171,6 +188,7 @@ class PlayGame(Frame):
         self.show_current_guess(init_guess)
 
 
+    # GUI implementation for showing the combination of the user at the top of the frame
     def show_my_combo(self):
         row = 2 
         Label(self, text="   Your combo is   ", bg="SkyBlue1").grid(row=row, column=0, columnspan=6)
@@ -181,12 +199,17 @@ class PlayGame(Frame):
             l.grid(row=row,column=col_count,  sticky=W, padx=2)
             col_count += 1
 
+
+    # Returns the actual colors from an array of indeces passed in guess. For example, [1,2,3,4]
+    # would return ["navy", "gray", "maroon", "blue"]. Indeces in the arrays range from 1-6 (not 0-5)
     def idx_to_cols(self, guess):
         cols = []
         for i in guess:
             cols.append(self.controller.possible_cols[i-1])
         return cols
 
+
+    # Shows most recent guess below the user's combination
     def show_current_guess(self, new_guess):
         row = 4
         Label(self, text="   New Guess:   ", bg="SkyBlue1").grid(row=row, column=0, columnspan=6)
@@ -199,6 +222,8 @@ class PlayGame(Frame):
             col_count += 1
         self.view_old_guesses()
 
+
+    # Shows old guesses and responses underneath most recent guess, from newest to lowest
     def view_old_guesses(self):
         row = 6
         number_of_positions = self.controller.num_pegs
@@ -222,7 +247,11 @@ class PlayGame(Frame):
                 l.grid(row=row,column=col_count, padx=2)  
                 col_count += 1    
 
+
+    # Takes user reponses on the guess, and checks whether it is accurate
+    # If not, shows pop-up message to prompt the user to re-enter the values
     def eval_guess(self, both, colors, most_recent_guess):
+        # If user left a field blank, assume number of pegs is 0
         if len(both) == 0:
             both = 0
         if len(colors) == 0:
@@ -235,6 +264,7 @@ class PlayGame(Frame):
         filter_guess = []
         filter_combo = []
         
+        # Filter out all pegs that have both number of color and position correct
         for i in range(self.controller.num_pegs):
             if self.controller.combo[i] == col_guess[i]:
                 right_num_both += 1
@@ -242,6 +272,7 @@ class PlayGame(Frame):
                 filter_guess.append(col_guess[i])
                 filter_combo.append(self.controller.combo[i])
 
+        # Filter out pegs that have correct color
         for j in range(len(filter_combo)):
             if filter_guess[j] in filter_combo:
                 right_num_cols += 1
@@ -256,6 +287,7 @@ class PlayGame(Frame):
             else:   
                 self.responses.append(eval_result)
                 self.AI_play(self.responses, self.guesses) 
+
 
 #################################################################################
 # GENETIC ALGORITHM FUNCTIONS
@@ -395,7 +427,7 @@ class PlayGame(Frame):
 
         return E_h[0]
 
-
+    # Wrapper function for generation a new guess using GA
     def AI_play(self, responses, guesses):
         n_col = self.controller.num_cols
         n_peg = self.controller.num_pegs
