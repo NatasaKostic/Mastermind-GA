@@ -165,15 +165,16 @@ class PlayGame(Frame):
         entryWidget_only_colours = Entry(self, width=5, highlightbackground="SkyBlue1")
         entryWidget_only_colours.grid(row=row_offset+4, column=number_of_positions + 8, padx=(0,20))            
 
-        # Create a random initial guess
-        # init_guess = []
-        # while len(init_guess) < self.controller.num_pegs:
-            # i = random.randint(1, self.controller.num_cols)
-            # if i not in init_guess:
-                # init_guess.append(i)
-
-        init_guess = [1,2,1,4]
-
+        init_guess = []
+        if self.controller.num_pegs == 4:
+            init_guess = [1,2,1,4]
+        else:
+            # create a random initial guess
+            while len(init_guess) < self.controller.num_pegs:
+                i = random.randint(1, self.controller.num_cols)
+                if i not in init_guess:
+                    init_guess.append(i)
+        
         self.most_recent_guess = init_guess
 
         # Add to the list of all guesses
