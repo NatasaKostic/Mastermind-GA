@@ -1,0 +1,9 @@
+The fitness function evaluates a particular option P against all previously played guesses. Each previous guess has a response (X_i, Y_i) indicating its score compared to the real code (see paper for details). When evaluating fitness of P, we pretend a previous guess is the true code, and we get a response (X_gi, Y_gi) for P compared to guess g_i. If the value |X_gi - X_i| + |Y_gi - Y_i| = 0, we know that option P is a possible guess given that g_i was a previous guess. 
+So, why should fitness be 0 for a code to be eligible?
+
+If guess g_i has the score (p,q), it has p exact matches to the true code and q pegs of the correct color but in the wrong location. Now, we want to generate a new guess that could potentially be better. 
+
+To do so, we pick p pegs from g_i to stay the same (place and color same) in the new guess, since the the response to g_i told us that p pegs had the correct place and color. Next, we chose different locations for q of the pegs in g_i, while leaving the color the same. Again, this is logical because the response told us that q pegs were the right color but in the wrong place. This generates a possible new guess, g_(i+1). This guess, when compared to g_i has a score of (p,q)! By choosing to keep different sets of p pegs and move different sets of q pegs, we can generate several different options that all have scores (p,q) when compared to g_i. All of these codes are reasonable guesses to make next, considering the feedback we got about g_i.
+
+For any of these guesses, we see that when we take the difference between the scores for g_i (compared to secret code) and g_(i+1) (compared to g_i), we get |p-p| + |q-q| = 0. So, any reasonable successor code will have a fitness of 0.
+The fitness function is extended to use all previous guesses (not just the single one before) - this ensure that an eligible code makes sense given the feedback for each guess in the past.
